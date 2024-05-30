@@ -2,11 +2,11 @@ package com.multithreading.code;
 
 import java.time.*;
 
-class Event{
+class Event {
     protected String name;
-    protected ZonedDateTime start;
+    protected LocalDateTime start;
     protected LocalDateTime end;
-    protected int progress;
+    protected volatile int progress;
     protected String status;
 
     public Event(String name, LocalDateTime start, LocalDateTime end){
@@ -33,7 +33,7 @@ class Event{
         this.end = end;
     }
 
-    public void setProgress(int progress){
+    public synchronized void setProgress(int progress){
         this.progress = progress;
     }
 
@@ -45,7 +45,7 @@ class Event{
         return status;
     }
 
-    public int getProgress(){
+    public synchronized int getProgress(){
         return progress;
     }
 

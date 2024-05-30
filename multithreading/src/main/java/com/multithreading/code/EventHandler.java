@@ -7,18 +7,18 @@ public class EventHandler implements Runnable{
     public void run() {
         System.out.println("Event Handler is running");
         while(true){
-            ZoneId zoneId = ZoneId.of("Asia/Manila");
-            ZonedDateTime now = ZonedDateTime.now(zoneId);
+            LocalDateTime now = LocalDateTime.now();
 
             if(EventSchedulerRunner.events.size() > 0){
                 System.out.println("Event list is not empty");
                 Event currEvent = EventSchedulerRunner.events.get(0);
-                if((now.isAfter(currEvent.getStart()) || now.isEqual(currEvent.getStart())) && (now.isBefore(currEvent.getEnd()) || now.isEqual(currEvent.getEnd()))){
+                
+                if (!now.isBefore(currEvent.getStart()) && !now.isAfter(currEvent.getEnd())) {
                     Duration currDuration = Duration.between(currEvent.getStart(), now);
                     Duration totalDuration = Duration.between(currEvent.getStart(), currEvent.getEnd());
-
-                    long progress = (currDuration.toMinutes() * 100) / totalDuration.toMinutes();
-                    currEvent.setProgress((int)progress);
+                
+                    long progress = 100L * currDuration.toMinutes() / totalDuration.toMinutes();
+                    EventSchedulerRunner.events.get(0).setProgress((int) progress);
                     System.out.println("Progress: " + progress + "%");
                 }
 

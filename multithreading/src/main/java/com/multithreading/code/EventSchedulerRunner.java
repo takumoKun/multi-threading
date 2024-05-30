@@ -12,7 +12,7 @@ package com.multithreading.code;
 
 import jline.console.ConsoleReader;
 import java.io.IOException;
-import java.time.LocalDateTime;
+import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
@@ -36,12 +36,23 @@ public class EventSchedulerRunner implements TextProperties{
     private static volatile String eventStart;
     private static volatile String eventEnd;
 
+    public static synchronized void removeEvent(int index){
+        System.out.println("Event Removed!");
+        events.remove(index);
+    }
+
+    public static synchronized void addEvent(Event event){
+        events.add(event);
+    }
+
+    // public void show
+
     public static void main(String[] args) {
         //start input thread
         Thread inputThread = new Thread(new InputHandler());
         inputThread.start();
-        Thread eventThread = new Thread(new EventHandler());
-        eventThread.start();
+        // Thread eventThread = new Thread(new EventHandler());
+        // eventThread.start();
 
         //main loop
         while(userLoc != UserLoc.EXIT){
@@ -80,11 +91,32 @@ public class EventSchedulerRunner implements TextProperties{
 
                 updateScreen = false;
 
-                try {
-                    Thread.sleep(100);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
+
+            }
+
+            LocalDateTime now = LocalDateTime.now();
+
+            if(EventSchedulerRunner.events.size() > 0){
+                events.get(0);
+                
+                if (!now.isBefore(events.get(0).getStart()) && !now.isAfter(events.get(0).getEnd())) {
+                    Duration currDuration = Duration.between(events.get(0).getStart(), now);
+                    Duration totalDuration = Duration.between(events.get(0).getStart(), events.get(0).getEnd());
+                
+                    long progress = 100L * currDuration.toMinutes() / totalDuration.toMinutes();
+                    EventSchedulerRunner.events.get(0).setProgress((int) progress);
+                    System.out.println("Progress: " + progress + "%");
                 }
+
+                if(now.isAfter(events.get(0).getEnd())){
+                    EventSchedulerRunner.events.get(0).setStatus("Done");
+                }
+            }
+
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
             }
         }
 
@@ -490,11 +522,7 @@ public class EventSchedulerRunner implements TextProperties{
                                     case 3:
                                         //return to the menu and add the event to the list
                                         userLoc = UserLoc.MENU;
-                                        events.add(new Event(
-                                            eventName,
-                                            LocalDateTime.parse(eventStart, format),
-                                            LocalDateTime.parse(eventEnd, format)
-                                        ));
+                                        addEvent(new Event(eventName, LocalDateTime.parse(eventStart, format), LocalDateTime.parse(eventEnd, format)));
 
                                         //set the temporary event variables to null
                                         eventName = null;
@@ -519,7 +547,7 @@ public class EventSchedulerRunner implements TextProperties{
                             //check if there are events to remove
                             if(events.size() > 0){
                                 //remove the event and update the screen and the number of prompts (in this case the number of events)
-                                events.remove(cursorLoc);
+                                removeEvent(cursorLoc);
                                 if(cursorLoc > 0)
                                     cursorLoc--;
                                 updateScreen = true;
